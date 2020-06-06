@@ -1,2 +1,3 @@
 rootProject.name='Pigeon'
 include ':app'
+include ':pigeon'

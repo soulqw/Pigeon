@@ -1,4 +1,4 @@
-package com.qw.pigeon;
+package com.qw.sample;
 
 import org.junit.Test;
 
