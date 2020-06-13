@@ -1,8 +1,12 @@
-package com.qw.sample;
+package com.qw.pigeon;
 
 import androidx.annotation.Nullable;
 
+import com.qw.pigeon.debug.PigeonLogger;
+
 import java.lang.reflect.Method;
+
+import static com.qw.pigeon.debug.PigeonLogger.TAG;
 
 /**
  * @author cd5160866
@@ -14,12 +18,20 @@ public class MethodSubscribe {
 
     private Method method;
 
-    private Class argsType;
-
-    public MethodSubscribe(Object host, Method method, Class argsType) {
+    public MethodSubscribe(Object host, Method method) {
         this.host = host;
         this.method = method;
-        this.argsType = argsType;
+    }
+
+    public void callSubscribeMethodIfNeeded(Object objectForPost) {
+        if (objectForPost.getClass() != method.getParameterTypes()[0]) {
+            return;
+        }
+        try {
+            method.invoke(host, objectForPost);
+        } catch (Exception e) {
+            PigeonLogger.e(TAG, e.toString());
+        }
     }
 
     public Object getHost() {
@@ -38,14 +50,6 @@ public class MethodSubscribe {
         this.method = method;
     }
 
-    public Class getArgsType() {
-        return argsType;
-    }
-
-    public void setArgsType(Class argsType) {
-        this.argsType = argsType;
-    }
-
     @Override
     public int hashCode() {
         return super.hashCode();
@@ -58,7 +62,7 @@ public class MethodSubscribe {
         }
         MethodSubscribe origin = (MethodSubscribe) obj;
         return this.host == origin.host &&
-                this.method == origin.method &&
-                this.argsType == origin.argsType;
+                this.method.getName().equals(origin.method.getName()) &&
+                this.method.getParameterTypes()[0] == origin.method.getParameterTypes()[0];
     }
 }

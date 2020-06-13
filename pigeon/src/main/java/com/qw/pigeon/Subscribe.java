@@ -1,4 +1,4 @@
-package com.qw.sample;
+package com.qw.pigeon;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

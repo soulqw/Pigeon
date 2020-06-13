@@ -1,4 +1,4 @@
-package com.qw.sample;
+package com.qw.pigeon;
 
 import android.app.Activity;
 import android.app.Application;
