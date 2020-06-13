@@ -5,12 +5,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.qw.pigeon.Pigeon;
 import com.qw.pigeon.Subscribe;
+import com.qw.sample.event.ToastEvent;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -40,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 Pigeon.getDefault().post(new TestEvent("postDelay event"));
+                Pigeon.getDefault().post(new ToastEvent("postDelay event"));
             }
         }, 3000);
     }
@@ -47,7 +50,17 @@ public class MainActivity extends AppCompatActivity {
 
     @Subscribe
     public void test(TestEvent event) {
-        Log.d("qw", "MainActivity method invoke: ");
+        Log.d("qw", "MainActivity method test invoke: ");
+    }
+
+    @Subscribe
+    public void test2(TestEvent event) {
+        Log.d("qw", "MainActivity method test2 invoke: ");
+    }
+
+    @Subscribe
+    public void test(ToastEvent event) {
+        Toast.makeText(this, event.message, Toast.LENGTH_SHORT).show();
     }
 
     public static class TestEvent {
