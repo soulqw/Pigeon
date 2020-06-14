@@ -5,14 +5,17 @@ import android.util.ArrayMap;
 import androidx.annotation.NonNull;
 
 import com.qw.pigeon.debug.PigeonLogger;
+import com.qw.pigeon.post.MainThreadPoster;
+import com.qw.pigeon.post.Poster;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.qw.pigeon.debug.PigeonLogger.TAG;
 
@@ -21,12 +24,18 @@ import static com.qw.pigeon.debug.PigeonLogger.TAG;
  */
 public class Pigeon {
 
+    private final ExecutorService executorService;
+
     private static volatile Pigeon instance;
 
     private Map<Object, List<MethodSubscribe>> subscriptionsMap;
 
+    private Poster mainThreadPoster;
+
     private Pigeon() {
         subscriptionsMap = new ArrayMap<>(8);
+        executorService = Executors.newCachedThreadPool();
+        mainThreadPoster = new MainThreadPoster();
     }
 
     public static Pigeon getDefault() {
@@ -45,7 +54,9 @@ public class Pigeon {
             PigeonLogger.w(TAG, "null object: register");
             return;
         }
-        bindMethods(any);
+        synchronized (this) {
+            bindMethods(any);
+        }
     }
 
     public void unRegister(Object any) {
@@ -53,7 +64,9 @@ public class Pigeon {
             PigeonLogger.w(TAG, "null object: unRegister");
             return;
         }
-        unBindObject(any);
+        synchronized (this) {
+            unBindObject(any);
+        }
     }
 
     public void post(Object object) {
@@ -67,7 +80,24 @@ public class Pigeon {
             return;
         }
         for (MethodSubscribe sub : typeSubscriptions) {
-            sub.callSubscribeMethodIfNeeded(object);
+            postInternal(sub, object);
+        }
+    }
+
+    private void postInternal(MethodSubscribe sub, Object object) {
+        switch (sub.getThreadModel()) {
+            case ThreadMode.MAIN:
+                if (Utils.assertMainThread()) {
+                    sub.callSubscribeMethodIfNeeded(object);
+                } else {
+                    mainThreadPoster.post(object, sub);
+                }
+                break;
+            case ThreadMode.POSTING:
+                sub.callSubscribeMethodIfNeeded(object);
+                break;
+            default:
+                break;
         }
     }
 
@@ -75,8 +105,8 @@ public class Pigeon {
         Class clz = obj.getClass();
         Method[] allMethod = clz.getDeclaredMethods();
         for (Method method : allMethod) {
-            Annotation annotation = method.getAnnotation(Subscribe.class);
-            if (null != annotation &&
+            Subscribe subAnnotation = method.getAnnotation(Subscribe.class);
+            if (null != subAnnotation &&
                     method.getParameterTypes().length > 0) {
 
                 //get subscribe method list by type
@@ -87,7 +117,7 @@ public class Pigeon {
                     subscriptionsMap.put(paramsType, typeSubscriptions);
                 }
                 //add to subscribe list if needed
-                MethodSubscribe methodSubscribe = new MethodSubscribe(obj, method);
+                MethodSubscribe methodSubscribe = new MethodSubscribe(obj, method, subAnnotation.threadMode());
                 if (!typeSubscriptions.contains(methodSubscribe)) {
                     typeSubscriptions.add(methodSubscribe);
                 }
@@ -97,6 +127,7 @@ public class Pigeon {
     }
 
     private void unBindObject(@NonNull Object obj) {
+
         Set<Map.Entry<Object, List<MethodSubscribe>>> allSet = subscriptionsMap.entrySet();
         for (Map.Entry<Object, List<MethodSubscribe>> objectListEntry : allSet) {
 

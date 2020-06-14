@@ -18,9 +18,12 @@ public class MethodSubscribe {
 
     private Method method;
 
-    public MethodSubscribe(Object host, Method method) {
+    private int threadModel;
+
+    public MethodSubscribe(Object host, Method method, int threadModel) {
         this.host = host;
         this.method = method;
+        this.threadModel = threadModel;
     }
 
     public void callSubscribeMethodIfNeeded(Object objectForPost) {
@@ -50,6 +53,14 @@ public class MethodSubscribe {
         this.method = method;
     }
 
+    public int getThreadModel() {
+        return threadModel;
+    }
+
+    public void setThreadModel(int threadModel) {
+        this.threadModel = threadModel;
+    }
+
     @Override
     public int hashCode() {
         return super.hashCode();
@@ -63,6 +74,7 @@ public class MethodSubscribe {
         MethodSubscribe origin = (MethodSubscribe) obj;
         return this.host == origin.host &&
                 this.method.getName().equals(origin.method.getName()) &&
+                this.threadModel == origin.threadModel &&
                 this.method.getParameterTypes()[0] == origin.method.getParameterTypes()[0];
     }
 }

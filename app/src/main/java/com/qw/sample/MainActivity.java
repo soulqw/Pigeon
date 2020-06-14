@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.qw.pigeon.Pigeon;
 import com.qw.pigeon.Subscribe;
+import com.qw.pigeon.ThreadMode;
 import com.qw.sample.event.ToastEvent;
 
 public class MainActivity extends AppCompatActivity {
@@ -58,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d("qw", "MainActivity method test2 invoke: ");
     }
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void test(ToastEvent event) {
         Toast.makeText(this, event.message, Toast.LENGTH_SHORT).show();
     }

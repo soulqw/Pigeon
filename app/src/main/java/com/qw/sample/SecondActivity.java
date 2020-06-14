@@ -11,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.qw.pigeon.Pigeon;
 import com.qw.pigeon.Subscribe;
 
+import org.greenrobot.eventbus.EventBus;
+
 /**
  * @author cd5160866
  * @date 2020/6/13
@@ -25,6 +27,7 @@ public class SecondActivity extends AppCompatActivity {
     }
 
     public void postDefault(View v) {
+//        EventBus.getDefault().post();
         Pigeon.getDefault().post(new MainActivity.TestEvent("default event"));
     }
 
@@ -37,7 +40,7 @@ public class SecondActivity extends AppCompatActivity {
         }, 500);
     }
 
-    @Subscribe
+    @Subscribe()
     public void test(MainActivity.TestEvent event) {
         Log.d("qw", "SecondActivity method invoke: ");
     }

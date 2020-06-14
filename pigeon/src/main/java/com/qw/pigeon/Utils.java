@@ -1,5 +1,7 @@
 package com.qw.pigeon;
 
+import android.os.Looper;
+
 import java.util.List;
 
 /**
@@ -11,6 +13,10 @@ class Utils {
 
     public static boolean isEmpty(List list) {
         return null == list || list.isEmpty();
+    }
+
+    public static boolean assertMainThread() {
+        return Thread.currentThread().getId() == Looper.getMainLooper().getThread().getId();
     }
 
 }
