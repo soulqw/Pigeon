@@ -5,6 +5,7 @@ import android.util.ArrayMap;
 import androidx.annotation.NonNull;
 
 import com.qw.pigeon.debug.PigeonLogger;
+import com.qw.pigeon.post.BackGroundPoster;
 import com.qw.pigeon.post.MainThreadPoster;
 import com.qw.pigeon.post.Poster;
 
@@ -32,9 +33,12 @@ public class Pigeon {
 
     private Poster mainThreadPoster;
 
+    private Poster backGroundPoster;
+
     private Pigeon() {
         subscriptionsMap = new ArrayMap<>(8);
         executorService = Executors.newCachedThreadPool();
+        backGroundPoster = new BackGroundPoster(executorService);
         mainThreadPoster = new MainThreadPoster();
     }
 
@@ -92,6 +96,9 @@ public class Pigeon {
                 } else {
                     mainThreadPoster.post(object, sub);
                 }
+                break;
+            case ThreadMode.BACKGROUND:
+                backGroundPoster.post(object,sub);
                 break;
             case ThreadMode.POSTING:
                 sub.callSubscribeMethodIfNeeded(object);

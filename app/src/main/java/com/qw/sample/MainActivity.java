@@ -51,12 +51,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Subscribe
     public void test(TestEvent event) {
-        Log.d("qw", "MainActivity method test invoke: ");
+        Log.d("qw", "MainActivity method test invoke: " + Thread.currentThread().getName());
     }
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.BACKGROUND)
     public void test2(TestEvent event) {
-        Log.d("qw", "MainActivity method test2 invoke: ");
+        Log.d("qw", "MainActivity method test2 invoke: " + Thread.currentThread().getName());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
