@@ -90,6 +90,9 @@ public class Pigeon {
 
     private void postInternal(MethodSubscribe sub, Object object) {
         switch (sub.getThreadModel()) {
+            case ThreadMode.ASYNC:
+                backGroundPoster.post(object, sub);
+                break;
             case ThreadMode.MAIN:
                 if (Utils.assertMainThread()) {
                     sub.callSubscribeMethodIfNeeded(object);
@@ -98,7 +101,11 @@ public class Pigeon {
                 }
                 break;
             case ThreadMode.BACKGROUND:
-                backGroundPoster.post(object,sub);
+                if (Utils.assertMainThread()) {
+                    backGroundPoster.post(object, sub);
+                } else {
+                    sub.callSubscribeMethodIfNeeded(object);
+                }
                 break;
             case ThreadMode.POSTING:
                 sub.callSubscribeMethodIfNeeded(object);
