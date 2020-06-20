@@ -25,8 +25,6 @@ import static com.qw.pigeon.debug.PigeonLogger.TAG;
  */
 public class Pigeon {
 
-    private final ExecutorService executorService;
-
     private static volatile Pigeon instance;
 
     private Map<Object, List<MethodSubscribe>> subscriptionsMap;
@@ -37,8 +35,7 @@ public class Pigeon {
 
     private Pigeon() {
         subscriptionsMap = new ArrayMap<>(8);
-        executorService = Executors.newCachedThreadPool();
-        backGroundPoster = new BackGroundPoster(executorService);
+        backGroundPoster = new BackGroundPoster(Executors.newCachedThreadPool());
         mainThreadPoster = new MainThreadPoster();
     }
 
@@ -100,6 +97,9 @@ public class Pigeon {
                     mainThreadPoster.post(object, sub);
                 }
                 break;
+            case ThreadMode.MAIN_ORDERED:
+                mainThreadPoster.post(object, sub);
+                break;
             case ThreadMode.BACKGROUND:
                 if (Utils.assertMainThread()) {
                     backGroundPoster.post(object, sub);
@@ -108,9 +108,8 @@ public class Pigeon {
                 }
                 break;
             case ThreadMode.POSTING:
-                sub.callSubscribeMethodIfNeeded(object);
-                break;
             default:
+                sub.callSubscribeMethodIfNeeded(object);
                 break;
         }
     }
@@ -131,11 +130,16 @@ public class Pigeon {
                     subscriptionsMap.put(paramsType, typeSubscriptions);
                 }
                 //add to subscribe list if needed
-                MethodSubscribe methodSubscribe = new MethodSubscribe(obj, method, subAnnotation.threadMode());
+                MethodSubscribe methodSubscribe = new MethodSubscribe(obj, method, subAnnotation.threadMode(), subAnnotation.priority(), subAnnotation.sticky());
                 if (!typeSubscriptions.contains(methodSubscribe)) {
-                    typeSubscriptions.add(methodSubscribe);
+                    int size = typeSubscriptions.size();
+                    for (int i = 0; i <= size; i++) {
+                        if (i == size || methodSubscribe.getPriority() > typeSubscriptions.get(i).getPriority()) {
+                            typeSubscriptions.add(i, methodSubscribe);
+                            break;
+                        }
+                    }
                 }
-
             }
         }
     }

@@ -15,6 +15,8 @@ import com.qw.pigeon.Subscribe;
 import com.qw.pigeon.ThreadMode;
 import com.qw.sample.event.ToastEvent;
 
+import org.greenrobot.eventbus.EventBus;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -49,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED, priority = 10, sticky = true)
     public void test(TestEvent event) {
         Log.d("qw", "MainActivity method test invoke: " + Thread.currentThread().getName());
     }
@@ -62,6 +64,16 @@ public class MainActivity extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void test(ToastEvent event) {
         Toast.makeText(this, event.message, Toast.LENGTH_SHORT).show();
+    }
+
+    @Subscribe(priority = 1)
+    public void testP1(TestEvent event) {
+        Log.d("qw", "MainActivity method testP1 invoke: " + Thread.currentThread().getName());
+    }
+
+    @Subscribe(priority = 2)
+    public void testP2(TestEvent event) {
+        Log.d("qw", "MainActivity method testP2 invoke: " + Thread.currentThread().getName());
     }
 
     public static class TestEvent {

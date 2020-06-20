@@ -14,16 +14,24 @@ import static com.qw.pigeon.debug.PigeonLogger.TAG;
  */
 public class MethodSubscribe {
 
+    private static final int IS_STICKY_FLAG = 0x1 << 5;
+
     private Object host;
 
     private Method method;
 
-    private int threadModel;
+    private int priority;
 
-    public MethodSubscribe(Object host, Method method, int threadModel) {
+    private int mFlags;
+
+    public MethodSubscribe(Object host, Method method, int threadModel, int priority, boolean isSticky) {
         this.host = host;
         this.method = method;
-        this.threadModel = threadModel;
+        this.priority = priority;
+        this.mFlags |= threadModel;
+        if (isSticky) {
+            this.mFlags |= IS_STICKY_FLAG;
+        }
     }
 
     public void callSubscribeMethodIfNeeded(Object objectForPost) {
@@ -37,12 +45,16 @@ public class MethodSubscribe {
         }
     }
 
-    public Object getHost() {
-        return host;
+    public int getPriority() {
+        return priority;
     }
 
-    public void setHost(Object host) {
-        this.host = host;
+    public boolean isSticky() {
+        return (mFlags & IS_STICKY_FLAG) != 0;
+    }
+
+    public Object getHost() {
+        return host;
     }
 
     public Method getMethod() {
@@ -54,11 +66,7 @@ public class MethodSubscribe {
     }
 
     public int getThreadModel() {
-        return threadModel;
-    }
-
-    public void setThreadModel(int threadModel) {
-        this.threadModel = threadModel;
+        return (mFlags | IS_STICKY_FLAG) ^ IS_STICKY_FLAG;
     }
 
     @Override
@@ -74,7 +82,7 @@ public class MethodSubscribe {
         MethodSubscribe origin = (MethodSubscribe) obj;
         return this.host == origin.host &&
                 this.method.getName().equals(origin.method.getName()) &&
-                this.threadModel == origin.threadModel &&
+                this.getThreadModel() == origin.getThreadModel() &&
                 this.method.getParameterTypes()[0] == origin.method.getParameterTypes()[0];
     }
 }
