@@ -1,5 +1,7 @@
 package com.qw.pigeon;
 
+import android.util.Log;
+
 import androidx.annotation.Nullable;
 
 import com.qw.pigeon.debug.PigeonLogger;
@@ -14,24 +16,29 @@ import static com.qw.pigeon.debug.PigeonLogger.TAG;
  */
 public class MethodSubscribe {
 
+    private static final int SHIFT = 25;
+
+    private static final int MODE_MASK = 0x63 << SHIFT;
+
     private static final int IS_STICKY_FLAG = 0x1 << 5;
 
     private Object host;
 
     private Method method;
 
-    private int priority;
-
-    private int mFlags;
+    private int mFlags = 0x0;
 
     public MethodSubscribe(Object host, Method method, int threadModel, int priority, boolean isSticky) {
         this.host = host;
         this.method = method;
-        this.priority = priority;
-        this.mFlags |= threadModel;
+        int flags = 0x0;
+        flags |= threadModel;
         if (isSticky) {
-            this.mFlags |= IS_STICKY_FLAG;
+            flags |= IS_STICKY_FLAG;
         }
+        flags = flags << SHIFT;
+        this.mFlags = (priority & ~MODE_MASK) | flags & MODE_MASK;
+        Log.d("qw", mFlags + "");
     }
 
     public void callSubscribeMethodIfNeeded(Object objectForPost) {
@@ -46,11 +53,12 @@ public class MethodSubscribe {
     }
 
     public int getPriority() {
-        return priority;
+        return mFlags & ~MODE_MASK;
     }
 
     public boolean isSticky() {
-        return (mFlags & IS_STICKY_FLAG) != 0;
+        int flag = mFlags & MODE_MASK;
+        return (flag & (IS_STICKY_FLAG << SHIFT)) != 0;
     }
 
     public Object getHost() {
@@ -66,7 +74,9 @@ public class MethodSubscribe {
     }
 
     public int getThreadModel() {
-        return (mFlags | IS_STICKY_FLAG) ^ IS_STICKY_FLAG;
+        int flag = (mFlags & MODE_MASK) >> SHIFT;
+        int stickyFlag = IS_STICKY_FLAG;
+        return (flag | stickyFlag) ^ stickyFlag;
     }
 
     @Override
